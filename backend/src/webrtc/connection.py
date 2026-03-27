@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Callable
+from uuid import uuid4
 
 from aiortc import (
     MediaStreamTrack,
@@ -56,16 +57,19 @@ class WebRTCConnection:
 
         self._output_handler = OutputAudioHandler()
         self._pc.addTrack(self._output_handler.track)
+        self._current_speech_id: str | None = None
 
         def on_vad_event(event: VadEvent):
             logger.info(f"birajlog vad event: {event}")
             if event.type == "speech_started":
-                # TODO: interrupt
-                self._output_handler.clear_queue()
+                self._output_handler.clear_queue(cancel_id=self._current_speech_id)
+                self._current_speech_id = event.speech_id
             elif isinstance(event, VadSpeechEnded):
                 # for now, we're basically sending the user's speech as-is
                 self._background_tasks.add(
-                    asyncio.create_task(self._output_handler.enqueue_audio(event.speech))
+                    asyncio.create_task(
+                        self._output_handler.enqueue_audio(event.speech, id=event.speech_id)
+                    )
                 )
 
         self._vad = VAD(on_event=on_vad_event)

@@ -1,6 +1,7 @@
 import math
 from pathlib import Path
 from typing import Callable, Literal, NamedTuple
+from uuid import uuid4
 
 import torch
 
@@ -22,11 +23,13 @@ logger = get_logger(__name__)
 
 class VadSpeechStarted(NamedTuple):
     timestamp_sec: int | float
+    speech_id: str
     type: Literal["speech_started"] = "speech_started"
 
 
 class VadSpeechEnded(NamedTuple):
     timestamp_sec: int | float
+    speech_id: str
     speech: Audio
     type: Literal["speech_ended"] = "speech_ended"
 
@@ -56,6 +59,7 @@ class VAD:
 
         self._state: Literal["idle", "speaking"] = "idle"
         self._on_event = on_event
+        self._speech_id: str | None = None
 
     def process_frame(self, audio_frame: Audio):
         """
@@ -97,14 +101,28 @@ class VAD:
 
             if result.start is not None:
                 self._state = "speaking"
-                self._on_event(VadSpeechStarted(timestamp_sec=result.start))
+                self._speech_id = uuid4().hex
+                self._on_event(
+                    VadSpeechStarted(
+                        speech_id=self._speech_id,
+                        timestamp_sec=result.start,
+                    )
+                )
             elif result.end is not None:
                 self._state = "idle"
 
                 # emit the collected audio (the speech)
                 if self._buffer:
                     speech = Audio.from_list(self._buffer)
-                    self._on_event(VadSpeechEnded(timestamp_sec=result.end, speech=speech))
+                    assert self._speech_id is not None
+                    self._on_event(
+                        VadSpeechEnded(
+                            speech_id=self._speech_id,
+                            timestamp_sec=result.end,
+                            speech=speech,
+                        )
+                    )
+                    self._speech_id = None
 
                 # reset for next segment
                 self._buffer.clear()
