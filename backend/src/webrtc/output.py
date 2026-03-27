@@ -78,6 +78,13 @@ class OutputAudioTrack(MediaStreamTrack):
         except asyncio.QueueFull:
             logger.warning("Audio output queue full, dropping frame")
 
+    def clear_queue(self) -> None:
+        while not self._queue.empty():
+            try:
+                self._queue.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+
     async def close(self) -> None:
         """Close the track."""
         self.stop()
@@ -85,8 +92,8 @@ class OutputAudioTrack(MediaStreamTrack):
 
 
 class OutputAudioHandler:
-    def __init__(self, track=OutputAudioTrack()) -> None:
-        self._track = track
+    def __init__(self, track: OutputAudioTrack | None = None) -> None:
+        self._track = track or OutputAudioTrack()
         self._closed = False
 
     @property
@@ -103,6 +110,9 @@ class OutputAudioHandler:
             return
 
         await self._track.enqueue_audio(audio)
+
+    def clear_queue(self) -> None:
+        self.track.clear_queue()
 
     async def close(self) -> None:
         """Close the handler."""

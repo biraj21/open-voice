@@ -61,7 +61,7 @@ class WebRTCConnection:
             logger.info(f"birajlog vad event: {event}")
             if event.type == "speech_started":
                 # TODO: interrupt
-                pass
+                self._output_handler.clear_queue()
             elif isinstance(event, VadSpeechEnded):
                 # for now, we're basically sending the user's speech as-is
                 self._background_tasks.add(
