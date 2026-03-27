@@ -10,7 +10,7 @@ from aiortc import (
     RTCSessionDescription,
 )
 
-from src.classes import Audio
+from src.audio import Audio
 from src.logger import get_logger
 from src.schemas.realtime import SessionConfig
 from src.vad import VAD, VadEvent, VadSpeechEnded

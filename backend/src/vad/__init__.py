@@ -4,7 +4,7 @@ from typing import Callable, Literal, NamedTuple
 
 import torch
 
-from src.classes import Audio
+from src.audio import Audio
 from src.logger import get_logger
 
 from .utils import OnnxWrapper, VADIterator

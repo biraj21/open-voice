@@ -5,7 +5,7 @@ from typing import Callable
 from aiortc import MediaStreamError, MediaStreamTrack
 from av import AudioFrame
 
-from src.classes import Audio
+from src.audio import Audio
 from src.logger import get_logger
 
 logger = get_logger(__name__)
