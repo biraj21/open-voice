@@ -1,0 +1,13 @@
+# python
+.venv
+__pycache__/
+
+# node
+node_modules
+
+# environment files
+*.env
+
+.DS_Store
+
+.local

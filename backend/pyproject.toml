@@ -1,0 +1,36 @@
+[project]
+name = "open-voice-backend"
+version = "0.1.0"
+description = "Backend for Open Voice"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "aiortc>=1.14.0",
+    "fastapi[standard]>=0.135.1",
+    "httpx>=0.28.1",
+    "numpy>=2.4.3",
+    "onnxruntime>=1.24.4",
+    "openai>=2.29.0",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "soundfile>=0.13.1",
+    "torch>=2.10.0",
+    "torchaudio>=2.10.0",
+    "torchcodec>=0.10.0",
+    "websockets>=16.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.408",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+quote-style = "double" # use double quotes for strings
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+fixable = ["ALL"]
