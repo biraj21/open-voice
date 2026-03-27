@@ -1,6 +1,5 @@
 import asyncio
 from collections.abc import Callable
-from uuid import uuid4
 
 from aiortc import (
     MediaStreamTrack,
@@ -12,6 +11,7 @@ from aiortc import (
 )
 
 from src.audio import Audio
+from src.bg_tasks import BackgroundTasks
 from src.logger import get_logger
 from src.schemas.realtime import SessionConfig
 from src.vad import VAD, VadEvent, VadSpeechEnded
@@ -52,8 +52,6 @@ class WebRTCConnection:
         self._closed = False
         self._remote_description_set = False
         self._pending_ice_candidates: list[RTCIceCandidate] = []
-        self._background_tasks = set[asyncio.Task]()
-        """To keep strong references to fire-and-forget tasks. Must discard on completion."""
 
         self._output_handler = OutputAudioHandler()
         self._pc.addTrack(self._output_handler.track)
@@ -66,7 +64,7 @@ class WebRTCConnection:
                 self._current_speech_id = event.speech_id
             elif isinstance(event, VadSpeechEnded):
                 # for now, we're basically sending the user's speech as-is
-                self._background_tasks.add(
+                BackgroundTasks.add(
                     asyncio.create_task(
                         self._output_handler.enqueue_audio(event.speech, id=event.speech_id)
                     )
@@ -99,7 +97,7 @@ class WebRTCConnection:
     def _on_error(self, e: Exception, panic: bool = False):
         if panic:
             logger.error(f"webrtc connection panic (closing connection): {e}", exc_info=e)
-            self._add_background_task(asyncio.create_task(self.close()))
+            BackgroundTasks.add(self.close())
         else:
             logger.error(f"webrtc connection error: {e}", exc_info=e)
 
@@ -153,7 +151,3 @@ class WebRTCConnection:
                 done.set()
 
         await done.wait()
-
-    def _add_background_task(self, task: asyncio.Task):
-        self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.discard)
